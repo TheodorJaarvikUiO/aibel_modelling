@@ -1,0 +1,26 @@
+In a energy system where peak load from grid is 3MWh:
+
+    Without batteries:
+    - Total Grid Cost: 2 787 137.27 currency units
+
+    With batteries(1MWh capacity):
+    - Total Grid Cost: 2 481 117.59 currency units
+
+    With batteries(2MWh capacity):
+    - Total Grid Cost: 2 223 604.24 currency units
+
+    With batteries(3MWh capacity):
+    - Total Grid Cost: 2 017 963.31 currency units
+
+    With batteries(4MWh capacity):
+    - Total Grid Cost: 1 948 926.77 currency units
+
+    With batteries(5MWh capacity):
+    - Total Grid Cost: 1 891 409.52 currency units
+
+    With batteries(6MWh capacity):
+    - Total Grid Cost: 1 842 179.85 currency units
+
+    With batteries(7MWh capacity):
+    - Total Grid Cost: 1 803 442.01 currency units
+

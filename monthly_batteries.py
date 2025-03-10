@@ -37,9 +37,9 @@ network.add("Generator", "Grid", bus="bus0",p_nom=3000, marginal_cost=spot_price
 
 network.add("Store", "Battery",
             bus="bus0",
-            e_nom=5000,  # Battery capacity in kWh
+            e_nom=3000,  # Battery capacity in kWh
             e_cyclic=False,  # No cyclic behavior
-            e_initial=2500,# initial charge
+            e_initial=1500,# initial charge
             standing_loss=0.001,  # Small loss over time
             efficiency_store=0.9,  # Charge efficiency
             efficiency_dispatch=0.9,# Discharge efficiency

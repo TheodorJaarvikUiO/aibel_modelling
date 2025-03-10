@@ -18,3 +18,4 @@ pip install numpy
 > **T. Brown, J. Hörsch, D. Schlachtberger**  
 > *PyPSA: Python for Power System Analysis*, 2018, Journal of Open Research Software, 6(1),  
 > [arXiv:1707.09913](https://arxiv.org/abs/1707.09913), [DOI:10.5334/jors.188](https://doi.org/10.5334/jors.188)
+
