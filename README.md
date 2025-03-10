@@ -15,4 +15,6 @@ pip install pandas
 pip install numpy
 
 ### References
-1. Tehranchi, K., Barnes, T., Frysztacki, M., Hofmann, F., & Azevedo, I. L. (2023). PyPSA-USA: An Open-Source Energy System Optimization Model for the United States (Version 0.0.1). Retrieved from https://github.com/PyPSA/pypsa-usa
+> **T. Brown, J. Hörsch, D. Schlachtberger**  
+> *PyPSA: Python for Power System Analysis*, 2018, Journal of Open Research Software, 6(1),  
+> [arXiv:1707.09913](https://arxiv.org/abs/1707.09913), [DOI:10.5334/jors.188](https://doi.org/10.5334/jors.188)
