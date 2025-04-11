@@ -4,11 +4,33 @@ import pandas as pd
 import pypsa
 
 
+def wind_speed_to_capacity_factor(wind_speed):
+    cut_in = 3   # m/s
+    rated = 12   # m/s
+    cut_out = 25 # m/s
+
+    return np.piecewise(
+        wind_speed,
+        [wind_speed < cut_in,
+         (wind_speed >= cut_in) & (wind_speed < rated),
+         (wind_speed >= rated) & (wind_speed <= cut_out),
+         wind_speed > cut_out],
+        [0,  # Below cut-in: no power
+         lambda v: (v - cut_in) / (rated - cut_in),  # Ramp-up phase
+         1,  # At or above rated speed: full power
+         0]  # Above cut-out: no power
+    )
+
+
 #Network parameters and load
-low_power_mode = pd.read_csv('Datasets/aibel_week_load.csv', header=None, index_col=0, parse_dates=True)
-low_power_mode.head()
+low_power_mode = pd.read_csv('Datasets/aibel_yearly.csv', header=None, index_col=0, parse_dates=True, sep=';')
+wind_data = pd.read_csv('Datasets/1year_wind_haugesund.csv', header=None, index_col=0, parse_dates=True, dayfirst=True)
+wind_speed = wind_data.iloc[:, 0].values  # Extract first column as NumPy array
 network = pypsa.Network()
 network.set_snapshots(low_power_mode.index)
+wind_capacity_factor = wind_speed_to_capacity_factor(wind_speed)
+wind_capacity_factor = pd.Series(wind_capacity_factor, index=wind_data.index)
+wind_capacity_factor = wind_capacity_factor.reindex(network.snapshots, method="nearest")
 
 
 #Spot Prices
@@ -35,6 +57,9 @@ print(spot_prices.mean())
 network.add("Bus", "bus0")
 network.add("Load", "Shipyard_Load", bus="bus0", p_set=low_power_mode.squeeze()) # Load from csv
 network.add("Generator", "Grid", bus="bus0",p_nom=3000, marginal_cost=spot_prices) # 3 MW nominal power
+# # network.add("Generator", "Wind", bus="bus0", p_nom=1000, p_max_pu=pd.Series(wind_capacity_factor, index=wind_data.index)
+#             )
+
 
 network.add("Store", "Battery",
             bus="bus0",
@@ -222,33 +247,9 @@ economic_results = pd.DataFrame({
 
 print(economic_results)
 
-# Plot Power Flows
-plt.figure(figsize=(10, 5))
-plt.plot(time_index, load_profile, label="Load (kWh)", linestyle="dashed", color="black") # Load
-plt.plot(time_index, grid_supply, label="Grid Supply (kWh)", color="blue") # Grid supply
-plt.plot(time_index, battery_soc.diff() + battery_soc2.diff() + battery_soc3.diff() + battery_soc4.diff() + battery_soc5.diff() + battery_soc6.diff(), label="Battery Charge/Discharge (kWh) 1", color="green")
-plt.plot(time_index, spot_prices * 100, label="Spot price", color="red", linestyle="dotted") # Plot the spot prices
-plt.axhline(0, color="gray", linestyle="dotted")
-plt.xlabel("Time")
-plt.ylabel("Power (kWh)")
-plt.legend()
-plt.title("Load, Grid Supply, and Battery Usage Over Time")
-plt.grid(True)
-plt.savefig('Results/1week_usage.png')
-
-# Plot Battery State of Charge (SOC)
-plt.figure(figsize=(10, 5))
-plt.plot(time_index, battery_soc + battery_soc2 + battery_soc3 + battery_soc4 + battery_soc5 + battery_soc6, label="Battery SOC (kWh)", color="purple")
-plt.xlabel("Time")
-plt.ylabel("Stored Energy (kWh)")
-plt.title("Battery State of Charge Over Time")
-plt.legend()
-plt.grid(True)
-plt.savefig('Results/battery_soc_1week.png')
-
 # Plot just one single day
 start_index = 0
-end_index = 48
+end_index = 100
 plt.figure(figsize=(10, 5))
 plt.plot(time_index[start_index:end_index], load_profile[start_index:end_index], label="Load (kWh)", linestyle="dashed", color="black") # Load
 plt.plot(time_index[start_index:end_index], grid_supply[start_index:end_index], label="Grid Supply (kWh)", color="blue") # Grid supply
@@ -262,6 +263,17 @@ plt.title("Load, Grid Supply, and Battery Usage Over Time")
 plt.grid(True)
 plt.savefig('Results/one_day_usage.png')
 
+# battery soc
+plt.figure(figsize=(10, 5))
+plt.plot(time_index[start_index:end_index], battery_soc[start_index:end_index] + battery_soc2[start_index:end_index] + battery_soc3[start_index:end_index] + battery_soc4[start_index:end_index] + battery_soc5[start_index:end_index] + battery_soc6[start_index:end_index], label="Battery SOC (kWh)", color="purple")
+plt.xlabel("Time")
+plt.ylabel("Stored Energy (kWh)")
+plt.title("Battery State of Charge Over Time")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig('Results/battery_soc_usage.png')
+
 # Calculate installed capacity
 installed_capacity = network.statistics.installed_capacity()
 # Plot installed capacity by component type
@@ -274,3 +286,11 @@ plt.grid(axis='y')
 plt.tight_layout()
 plt.savefig('Results/statistics_advanced_usage.png')
 
+plt.figure(figsize=(10, 5))
+plt.plot(time_index, wind_capacity_factor, label="Wind Capacity Factor", color="cyan")
+plt.xlabel("Time")
+plt.ylabel("Capacity Factor (0-1)")
+plt.title("Wind Turbine Capacity Factor Over Time")
+plt.legend()
+plt.grid(True)
+plt.savefig('Results/wind_capacity_factor.png')
