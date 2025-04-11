@@ -34,24 +34,12 @@ wind_capacity_factor = wind_capacity_factor.reindex(network.snapshots, method="n
 
 
 #Spot Prices
-np.random.seed(55)
-n_hours = len(low_power_mode.index)
-cost_per_hour = np.random.uniform(10, 20, size=n_hours)
-morning_peak = [8, 9, 10]   # 08:00 - 10:59
-evening_peak = [16, 17, 18] # 16:00 - 18:59
-
-# Apply peak multipliers every day
-for i in range(n_hours):
-    hour_of_day = i % 24  # Get the hour in a 24-hour cycle
-
-    if hour_of_day in morning_peak:
-        cost_per_hour[i] *= 1.5  # Increase by 50% during morning peak
-    elif hour_of_day in evening_peak:
-        cost_per_hour[i] *= 3 #Increase 200% during evening peak
-
-cost_per_hour += np.random.normal(0, 3, size=n_hours)  # Add noise
-spot_prices = pd.Series(cost_per_hour, index=low_power_mode.index)
-print(spot_prices.mean())
+spotPrice_csv = pd.read_csv("Datasets/Spot_price.csv")
+spotPrice_csv['Time'] = pd.to_datetime(spotPrice_csv['Time'], format='%Y-%m-%dT%H:%M%z',utc=True)
+full_time_range = pd.date_range(start="2024-01-01 01:00+1:00", end="2024-12-31 23:00+1:00", freq='h')  
+full_time_range = full_time_range.tz_convert('UTC')  # Convert to UTC timezone
+df_time = pd.DataFrame({'Time': full_time_range})
+spot_prices = df_time.merge(spotPrice_csv, on='Time', how='outer')
 
 #Add components, Bus - Load - Generator(Grid) - Battery
 network.add("Bus", "bus0")
