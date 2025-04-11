@@ -21,177 +21,58 @@ def wind_speed_to_capacity_factor(wind_speed):
          0]  # Above cut-out: no power
     )
 
+#Spot Prices
+spotPrice_csv = pd.read_csv("Datasets/Spot_price.csv", index_col=0, parse_dates=True)
+
 
 #Network parameters and load
 low_power_mode = pd.read_csv('Datasets/aibel_yearly.csv', header=None, index_col=0, parse_dates=True, sep=';')
 wind_data = pd.read_csv('Datasets/1year_wind_haugesund.csv', header=None, index_col=0, parse_dates=True, dayfirst=True)
 wind_speed = wind_data.iloc[:, 0].values  # Extract first column as NumPy array
+
+Full_Df = low_power_mode.merge(spotPrice_csv)
+print(Full_Df.head())
+
 network = pypsa.Network()
-network.set_snapshots(low_power_mode.index)
+network.set_snapshots(low_power_mode.index)  # Set the snapshots to the index of low_power_mode
 wind_capacity_factor = wind_speed_to_capacity_factor(wind_speed)
 wind_capacity_factor = pd.Series(wind_capacity_factor, index=wind_data.index)
 wind_capacity_factor = wind_capacity_factor.reindex(network.snapshots, method="nearest")
 
 
-#Spot Prices
-spotPrice_csv = pd.read_csv("Datasets/Spot_price.csv")
-spotPrice_csv['Time'] = pd.to_datetime(spotPrice_csv['Time'], format='%Y-%m-%dT%H:%M%z',utc=True)
-full_time_range = pd.date_range(start="2024-01-01 01:00+1:00", end="2024-12-31 23:00+1:00", freq='h')  
-full_time_range = full_time_range.tz_convert('UTC')  # Convert to UTC timezone
-df_time = pd.DataFrame({'Time': full_time_range})
-spot_prices = df_time.merge(spotPrice_csv, on='Time', how='outer')
-
 #Add components, Bus - Load - Generator(Grid) - Battery
 network.add("Bus", "bus0")
 network.add("Load", "Shipyard_Load", bus="bus0", p_set=low_power_mode.squeeze()) # Load from csv
-network.add("Generator", "Grid", bus="bus0",p_nom=3000, marginal_cost=spot_prices) # 3 MW nominal power
+network.add("Generator", "Grid", bus="bus0",p_nom=3000, marginal_cost=spot_prices["Spot Price (NO2) EUR/MWh"]) # 3 MW nominal power
 # # network.add("Generator", "Wind", bus="bus0", p_nom=1000, p_max_pu=pd.Series(wind_capacity_factor, index=wind_data.index)
 #             )
 
+battery_names = ["Battery", "Battery2", "Battery3", "Battery4", "Battery5", "Battery6"]
 
-network.add("Store", "Battery",
-            bus="bus0",
-            e_nom=1000,  # Fixed battery capacity in kWh
-            #e_nom_extendable=True,  # Battery capacity can be extended, model decides optimal size
-            e_cyclic=False,  # No cyclic behavior (energy doesn't wrap around)
-            e_initial=0,  # Initial state of charge (SOC) in kWh
-            standing_loss=0.001,  # Small self-discharge loss per time step
+for battery_name in battery_names:
+    network.add("Store", battery_name,
+                bus="bus0",
+                e_nom=1000,  # Fixed battery capacity in kWh
+                # e_nom_extendable=True,  # Battery capacity can be extended, model decides optimal size
+                e_cyclic=False,  # No cyclic behavior (energy doesn't wrap around)
+                e_initial=0,  # Initial state of charge (SOC) in kWh
+                standing_loss=0.001,  # Small self-discharge loss per time step
 
-            # Efficiency parameters
-            efficiency_store=0.9,  # Charging efficiency (90%)
-            efficiency_dispatch=0.9,  # Discharging efficiency (90%)
+                # Efficiency parameters
+                efficiency_store=0.9,  # Charging efficiency (90%)
+                efficiency_dispatch=0.9,  # Discharging efficiency (90%)
 
-            # State of Charge (SOC) limits
-            e_min_pu=0.2,  # Minimum SOC (20% of capacity)
-            e_max_pu=0.8,  # Maximum SOC (80% of capacity)
+                # State of Charge (SOC) limits
+                e_min_pu=0.2,  # Minimum SOC (20% of capacity)
+                e_max_pu=0.8,  # Maximum SOC (80% of capacity)
 
-            # Cost parameters
-            capital_cost=100000,  # Investment cost per kWh installed capacity
-            # lifetime=10,  # Battery lifetime in years
-            # marginal_cost=0,  # Variable operation cost per kWh
-            # interest_rate=0.05,  # Discount rate for investment
-            # cyclic_state_of_charge=True,  # Allow cyclic SOC behavior (e.g., wrap around)
-            )
-
-network.add("Store", "Battery2",
-            bus="bus0",
-            e_nom=1000,  # Fixed battery capacity in kWh
-            #e_nom_extendable=True,  # Battery capacity can be extended, model decides optimal size
-            e_cyclic=False,  # No cyclic behavior (energy doesn't wrap around)
-            e_initial=0,  # Initial state of charge (SOC) in kWh
-            standing_loss=0.001,  # Small self-discharge loss per time step
-
-            # Efficiency parameters
-            efficiency_store=0.9,  # Charging efficiency (90%)
-            efficiency_dispatch=0.9,  # Discharging efficiency (90%)
-
-            # State of Charge (SOC) limits
-            e_min_pu=0.2,  # Minimum SOC (20% of capacity)
-            e_max_pu=0.8,  # Maximum SOC (80% of capacity)
-
-            # Cost parameters
-            capital_cost=100000,  # Investment cost per kWh installed capacity
-            # lifetime=10,  # Battery lifetime in years
-            # marginal_cost=0,  # Variable operation cost per kWh
-            # interest_rate=0.05,  # Discount rate for investment
-            # cyclic_state_of_charge=True,  # Allow cyclic SOC behavior (e.g., wrap around)
-            )
-
-network.add("Store", "Battery3",
-            bus="bus0",
-            e_nom=1000,  # Fixed battery capacity in kWh
-            #e_nom_extendable=True,  # Battery capacity can be extended, model decides optimal size
-            e_cyclic=False,  # No cyclic behavior (energy doesn't wrap around)
-            e_initial=0,  # Initial state of charge (SOC) in kWh
-            standing_loss=0.001,  # Small self-discharge loss per time step
-
-            # Efficiency parameters
-            efficiency_store=0.9,  # Charging efficiency (90%)
-            efficiency_dispatch=0.9,  # Discharging efficiency (90%)
-
-            # State of Charge (SOC) limits
-            e_min_pu=0.2,  # Minimum SOC (20% of capacity)
-            e_max_pu=0.8,  # Maximum SOC (80% of capacity)
-
-            # Cost parameters
-            capital_cost=100000,  # Investment cost per kWh installed capacity
-            # lifetime=10,  # Battery lifetime in years
-            # marginal_cost=0,  # Variable operation cost per kWh
-            # interest_rate=0.05,  # Discount rate for investment
-            # cyclic_state_of_charge=True,  # Allow cyclic SOC behavior (e.g., wrap around)
-            )
-
-network.add("Store", "Battery4",
-            bus="bus0",
-            e_nom=1000,  # Fixed battery capacity in kWh
-            #e_nom_extendable=True,  # Battery capacity can be extended, model decides optimal size
-            e_cyclic=False,  # No cyclic behavior (energy doesn't wrap around)
-            e_initial=0,  # Initial state of charge (SOC) in kWh
-            standing_loss=0.001,  # Small self-discharge loss per time step
-
-            # Efficiency parameters
-            efficiency_store=0.9,  # Charging efficiency (90%)
-            efficiency_dispatch=0.9,  # Discharging efficiency (90%)
-
-            # State of Charge (SOC) limits
-            e_min_pu=0.2,  # Minimum SOC (20% of capacity)
-            e_max_pu=0.8,  # Maximum SOC (80% of capacity)
-
-            # Cost parameters
-            capital_cost=100000,  # Investment cost per kWh installed capacity
-            # lifetime=10,  # Battery lifetime in years
-            # marginal_cost=0,  # Variable operation cost per kWh
-            # interest_rate=0.05,  # Discount rate for investment
-            # cyclic_state_of_charge=True,  # Allow cyclic SOC behavior (e.g., wrap around)
-            )
-
-network.add("Store", "Battery5",
-            bus="bus0",
-            e_nom=1000,  # Fixed battery capacity in kWh
-            #e_nom_extendable=True,  # Battery capacity can be extended, model decides optimal size
-            e_cyclic=False,  # No cyclic behavior (energy doesn't wrap around)
-            e_initial=0,  # Initial state of charge (SOC) in kWh
-            standing_loss=0.001,  # Small self-discharge loss per time step
-
-            # Efficiency parameters
-            efficiency_store=0.9,  # Charging efficiency (90%)
-            efficiency_dispatch=0.9,  # Discharging efficiency (90%)
-
-            # State of Charge (SOC) limits
-            e_min_pu=0.2,  # Minimum SOC (20% of capacity)
-            e_max_pu=0.8,  # Maximum SOC (80% of capacity)
-
-            # Cost parameters
-            capital_cost=100000,  # Investment cost per kWh installed capacity
-            # lifetime=10,  # Battery lifetime in years
-            # marginal_cost=0,  # Variable operation cost per kWh
-            # interest_rate=0.05,  # Discount rate for investment
-            # cyclic_state_of_charge=True,  # Allow cyclic SOC behavior (e.g., wrap around)
-            )
-
-network.add("Store", "Battery6",
-            bus="bus0",
-            e_nom=1000,  # Fixed battery capacity in kWh
-            #e_nom_extendable=True,  # Battery capacity can be extended, model decides optimal size
-            e_cyclic=False,  # No cyclic behavior (energy doesn't wrap around)
-            e_initial=0,  # Initial state of charge (SOC) in kWh
-            standing_loss=0.001,  # Small self-discharge loss per time step
-
-            # Efficiency parameters
-            efficiency_store=0.9,  # Charging efficiency (90%)
-            efficiency_dispatch=0.9,  # Discharging efficiency (90%)
-
-            # State of Charge (SOC) limits
-            e_min_pu=0.2,  # Minimum SOC (20% of capacity)
-            e_max_pu=0.8,  # Maximum SOC (80% of capacity)
-
-            # Cost parameters
-            capital_cost=100000,  # Investment cost per kWh installed capacity
-            # lifetime=10,  # Battery lifetime in years
-            # marginal_cost=0,  # Variable operation cost per kWh
-            # interest_rate=0.05,  # Discount rate for investment
-            # cyclic_state_of_charge=True,  # Allow cyclic SOC behavior (e.g., wrap around)
-            )
+                # Cost parameters
+                capital_cost=100000,  # Investment cost per kWh installed capacity
+                # lifetime=10,  # Battery lifetime in years
+                # marginal_cost=0,  # Variable operation cost per kWh
+                # interest_rate=0.05,  # Discount rate for investment
+                # cyclic_state_of_charge=True,  # Allow cyclic SOC behavior (e.g., wrap around)
+                )
 
 
 #Cost minimization
