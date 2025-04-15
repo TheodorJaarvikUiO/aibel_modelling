@@ -21,32 +21,25 @@ def wind_speed_to_capacity_factor(wind_speed):
          0]  # Above cut-out: no power
     )
 
-#Spot Prices
-spotPrice_csv = pd.read_csv("Datasets/Spot_price.csv", index_col=0, parse_dates=True)
-
-
 #Network parameters and load
 low_power_mode = pd.read_csv('Datasets/aibel_yearly.csv', header=None, index_col=0, parse_dates=True, sep=';')
-wind_data = pd.read_csv('Datasets/1year_wind_haugesund.csv', header=None, index_col=0, parse_dates=True, dayfirst=True)
-wind_speed = wind_data.iloc[:, 0].values  # Extract first column as NumPy array
-
-Full_Df = low_power_mode.merge(spotPrice_csv)
-print(Full_Df.head())
-
 network = pypsa.Network()
-network.set_snapshots(low_power_mode.index)  # Set the snapshots to the index of low_power_mode
-wind_capacity_factor = wind_speed_to_capacity_factor(wind_speed)
-wind_capacity_factor = pd.Series(wind_capacity_factor, index=wind_data.index)
-wind_capacity_factor = wind_capacity_factor.reindex(network.snapshots, method="nearest")
+Spot_prices2 = pd.read_csv('Datasets/Spot_price.csv', index_col=0)
 
+low_power_mode['Spot Price'] = Spot_prices2['Spot Price (NO2) EUR/MWh'].iloc[:len(low_power_mode)].values
+print(low_power_mode.head())
+network.set_snapshots(low_power_mode.index)
 
 #Add components, Bus - Load - Generator(Grid) - Battery
 network.add("Bus", "bus0")
-network.add("Load", "Shipyard_Load", bus="bus0", p_set=low_power_mode.squeeze()) # Load from csv
-network.add("Generator", "Grid", bus="bus0",p_nom=3000, marginal_cost=spot_prices["Spot Price (NO2) EUR/MWh"]) # 3 MW nominal power
-# # network.add("Generator", "Wind", bus="bus0", p_nom=1000, p_max_pu=pd.Series(wind_capacity_factor, index=wind_data.index)
-#             )
-
+network.add("Load", "Shipyard_Load", bus="bus0", p_set=low_power_mode[1].squeeze()) # Load from csv
+network.add("Generator", "Grid", bus="bus0",p_nom=3000, marginal_cost=low_power_mode['Spot Price'].squeeze()) # 3 MW nominal power
+network.add("Generator"," wind",
+                bus="bus0",
+                p_max_pu = wind_pu["_ON"],
+                p_nom_extendable = True,
+                marginal_cost = 0.02, #Small cost to prefer curtailment to destroying energy in storage, solar curtails before wind
+                capital_cost = 100000)
 battery_names = ["Battery", "Battery2", "Battery3", "Battery4", "Battery5", "Battery6"]
 
 for battery_name in battery_names:
@@ -95,10 +88,10 @@ load_profile = network.loads_t.p_set["Shipyard_Load"]
 total_system_cost = network.objective  # Total cost from optimization
 print(f"Total System Cost: {total_system_cost:.2f} currency units")
 
-grid_cost = (network.generators_t.p["Grid"] * spot_prices).sum()
+grid_cost = (network.generators_t.p["Grid"] * Spot_prices2).sum()
 print(f"Total Grid Supply Cost: {grid_cost:.2f} currency units")
 
-battery_charge_cost = ((network.stores_t.e["Battery"]) * spot_prices).sum()  # Example cost factor
+battery_charge_cost = ((network.stores_t.e["Battery"]) * Spot_prices2).sum()  # Example cost factor
 print(f"Total Battery Charge Cost: {battery_charge_cost:.2f} currency units")
 
 cost_breakdown = network.buses_t.marginal_price.sum()
@@ -123,7 +116,7 @@ plt.figure(figsize=(10, 5))
 plt.plot(time_index[start_index:end_index], load_profile[start_index:end_index], label="Load (kWh)", linestyle="dashed", color="black") # Load
 plt.plot(time_index[start_index:end_index], grid_supply[start_index:end_index], label="Grid Supply (kWh)", color="blue") # Grid supply
 plt.plot(time_index[start_index:end_index], battery_soc.diff()[start_index:end_index] + battery_soc2.diff()[start_index:end_index] + battery_soc3.diff()[start_index:end_index] + battery_soc4.diff()[start_index:end_index] + battery_soc5.diff()[start_index:end_index] + battery_soc6.diff()[start_index:end_index], label="Battery Charge/Discharge (kWh)", color="green") # Battery charge/discharge
-plt.plot(time_index[start_index:end_index], spot_prices[start_index:end_index] * 100, label="Spot price", color="red", linestyle="dotted") # Plot the spot prices
+plt.plot(time_index[start_index:end_index], Spot_prices2[start_index:end_index] * 100, label="Spot price", color="red", linestyle="dotted") # Plot the spot prices
 plt.axhline(0, color="gray", linestyle="dotted")
 plt.xlabel("Time")
 plt.ylabel("Power (kWh)")
@@ -155,11 +148,11 @@ plt.grid(axis='y')
 plt.tight_layout()
 plt.savefig('Results/statistics_advanced_usage.png')
 
-plt.figure(figsize=(10, 5))
-plt.plot(time_index, wind_capacity_factor, label="Wind Capacity Factor", color="cyan")
-plt.xlabel("Time")
-plt.ylabel("Capacity Factor (0-1)")
-plt.title("Wind Turbine Capacity Factor Over Time")
-plt.legend()
-plt.grid(True)
-plt.savefig('Results/wind_capacity_factor.png')
+#plt.figure(figsize=(10, 5))
+#plt.plot(time_index, wind_capacity_factor, label="Wind Capacity Factor", color="cyan")
+#plt.xlabel("Time")
+#plt.ylabel("Capacity Factor (0-1)")
+#plt.title("Wind Turbine Capacity Factor Over Time")
+#plt.legend()
+#plt.grid(True)
+#plt.savefig('Results/wind_capacity_factor.png')
