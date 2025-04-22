@@ -7,14 +7,37 @@ import pypsa
 low_power_mode = pd.read_csv('Datasets/aibel_yearly.csv', header=None, index_col=0, parse_dates=True, sep=';')
 network = pypsa.Network()
 Spot_prices2 = pd.read_csv('Datasets/Spot_price.csv', index_col=0)
-
+solar_profile = pd.read_csv('Datasets/system_production.csv', index_col=0)
+solar_profile["0"] = solar_profile["0"].clip(lower=0.0).fillna(0.0)
 low_power_mode['Spot Price'] = Spot_prices2['Spot Price (NO2) EUR/MWh'].iloc[:len(low_power_mode)].values / 1000
 network.set_snapshots(low_power_mode.index)
+solar_profile.index = network.snapshots
+print(solar_profile.head())
 
 #Add components, Bus - Load - Generator(Grid) - Battery
-network.add("Bus", "bus0")
-network.add("Load", "Shipyard_Load", bus="bus0", p_set=low_power_mode[1].squeeze()) # Load from csv
-network.add("Generator", "Grid", bus="bus0",p_nom=3000, marginal_cost=low_power_mode['Spot Price'].squeeze()) # 3 MW nominal power
+network.add("Bus", name="bus0")
+
+network.add("Load",
+            name="Shipyard_Load",
+            bus="bus0",
+            p_set=low_power_mode[1].squeeze())
+
+network.add("Generator",
+            name="Grid",
+            bus="bus0",
+            p_nom=3000,
+            marginal_cost=low_power_mode["Spot Price"].squeeze())
+
+network.add("Generator",
+            name="solar_pv",
+            bus="bus0",
+            carrier="solar",
+            p_nom=1,
+            p_max_pu=solar_profile["0"],
+            efficiency=1.0,
+            capital_cost=0,
+            marginal_cost=0.0,
+            p_min_pu=0.0)
 
 battery_names = ["Battery", "Battery2", "Battery3", "Battery4", "Battery5", "Battery6"]
 
@@ -51,13 +74,13 @@ network.optimize()
 # Extract results
 time_index = network.snapshots
 grid_supply = network.generators_t.p["Grid"]
+solar_profile = network.generators_t.p["solar_pv"]
 battery_soc = network.stores_t.e["Battery"]
 battery_soc2 = network.stores_t.e["Battery2"]
 battery_soc3 = network.stores_t.e["Battery3"]
 battery_soc4 = network.stores_t.e["Battery4"]
 battery_soc5 = network.stores_t.e["Battery5"]
 battery_soc6 = network.stores_t.e["Battery6"]
-
 load_profile = network.loads_t.p_set["Shipyard_Load"]
 
 total_system_cost = network.objective  # Total cost from optimization
@@ -94,6 +117,7 @@ plt.plot(time_index[start_index:end_index], load_profile[start_index:end_index],
 plt.plot(time_index[start_index:end_index], grid_supply[start_index:end_index], label="Grid Supply (kWh)", color="blue") # Grid supply
 plt.plot(time_index[start_index:end_index], battery_soc.diff()[start_index:end_index] + battery_soc2.diff()[start_index:end_index] + battery_soc3.diff()[start_index:end_index] + battery_soc4.diff()[start_index:end_index] + battery_soc5.diff()[start_index:end_index] + battery_soc6.diff()[start_index:end_index], label="Battery Charge/Discharge (kWh)", color="green") # Battery charge/discharge
 plt.plot(time_index[start_index:end_index], low_power_mode['Spot Price'].squeeze()[start_index:end_index] * 10000, label="Spot price", color="red", linestyle="dotted") # Plot the spot prices
+plt.plot(time_index[start_index:end_index], solar_profile[start_index:end_index], label="Solar (kWh)", color="orange")
 plt.axhline(0, color="gray", linestyle="dotted")
 plt.xlabel("Time")
 plt.ylabel("Power (kWh)")
@@ -113,3 +137,17 @@ plt.legend()
 plt.grid(True)
 plt.tight_layout()
 plt.show()
+
+# Battery soc and solar productrion
+plt.figure(figsize=(16, 5))
+plt.plot(time_index[start_index:end_index], battery_soc[start_index:end_index] + battery_soc2[start_index:end_index] + battery_soc3[start_index:end_index] + battery_soc4[start_index:end_index] + battery_soc5[start_index:end_index] + battery_soc6[start_index:end_index] , label="Battery SOC (kWh)", color="purple")
+plt.plot(time_index[start_index:end_index], solar_profile[start_index:end_index], label="Solar (kWh)", color="orange")
+plt.xlabel("Time")
+plt.ylabel("kW per hour")
+plt.title("Battery SOC and solar")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+#
