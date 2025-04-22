@@ -22,13 +22,33 @@ def wind_speed_to_capacity_factor(wind_speed):
     )
 
 #Network parameters and load
-low_power_mode = pd.read_csv('Datasets/aibel_yearly.csv', header=None, index_col=0, parse_dates=True, sep=';')
+consumption = pd.read_csv('Datasets/Consumption.csv', sep=',', index_col=0, parse_dates=True)
+#low_power_mode = consumption[['Time','Low Power Mode']]
+#print(low_power_mode.head())
+
+Spot_prices2 = pd.read_csv('Datasets/Spot_price.csv', index_col=0, parse_dates=True)
+#Spot_prices2['Time'].replace('T', ' ', regex=True, inplace=True)
+#Spot_prices2['Time'] = pd.to_datetime(Spot_prices2['Time'], format='ISO8601',utc=True)
+
+Spot_prices2.index = pd.to_datetime(Spot_prices2.index).tz_convert(None)
+consumption.index = pd.to_datetime(consumption.index)
+#Spot_prices2.set_index('Time', inplace=True)
+
+# Use "Low Power Mode" consumption
+consumption_series = consumption['Low Power Mode']
+spot_price_series = Spot_prices2['Spot Price (NO2) EUR/MWh']
+
+# Align the time series
+consumption_series = consumption_series.reindex(spot_price_series.index)
+spot_price_series = spot_price_series.reindex(consumption_series.index)
+print(spot_price_series.head())
+print(consumption_series.head())
+
 network = pypsa.Network()
-Spot_prices2 = pd.read_csv('Datasets/Spot_price.csv', index_col=0)
+network.set_snapshots(low_power_mode.index)
 
 low_power_mode['Spot Price'] = Spot_prices2['Spot Price (NO2) EUR/MWh'].iloc[:len(low_power_mode)].values
 print(low_power_mode.head())
-network.set_snapshots(low_power_mode.index)
 
 #Add components, Bus - Load - Generator(Grid) - Battery
 network.add("Bus", "bus0")
