@@ -64,7 +64,7 @@ location = Location(
 )
 
 system = PVSystem(
-        surface_tilt=35,
+        surface_tilt=49,
         surface_azimuth=180,
         module_parameters=module,
         inverter_parameters=inverter,
@@ -86,7 +86,7 @@ fig.show()
 panel_height = 1.95
 panel_width = 0.99
 panel_peak_power = 295
-tilt_angle = 35
+tilt_angle = 49
 orientation = 180
 
 # Calculate the area occupied by the PV panel on a flat roof
@@ -107,7 +107,7 @@ print(f"Based on the specified system characteristics, {panel_count} panels can 
 
 # Calculate the monthly production of the entire PV installation 
 system_production = panel_count * module_energy / 1000
-system_production.to_csv('Results/system_production.csv', index=True)
+system_production.to_csv('Datasets/system_production.csv', index=True)
 #monthly_production = system_production.resample('ME').sum()
 
 # Plot monthly production
