@@ -9,7 +9,6 @@ network = pypsa.Network()
 Spot_prices2 = pd.read_csv('Datasets/Spot_price.csv', index_col=0)
 
 low_power_mode['Spot Price'] = Spot_prices2['Spot Price (NO2) EUR/MWh'].iloc[:len(low_power_mode)].values
-print(low_power_mode.head())
 network.set_snapshots(low_power_mode.index)
 
 #Add components, Bus - Load - Generator(Grid) - Battery
