@@ -25,7 +25,7 @@ network.add("Load",
 network.add("Generator",
             name="Grid",
             bus="bus0",
-            p_nom=3000,
+            p_nom=5000,
             marginal_cost=low_power_mode["Spot Price"].squeeze())
 
 network.add("Generator",
@@ -91,7 +91,7 @@ print(f"Total Grid Supply Cost: {grid_cost:.2f} Euro")
 
 print(f"Total Grid supply (kWh): {grid_supply.sum():.2f} kWh")
 
-battery_charge_cost = ((network.stores_t.e["Battery"]) * low_power_mode['Spot Price'].squeeze()).sum()  # Example cost factor
+battery_charge_cost = ((network.stores_t.e["Battery"]) * low_power_mode['Spot Price'].squeeze()).sum()
 print(f"Total Battery Charge Cost: {battery_charge_cost:.2f} Euro")
 
 cost_breakdown = network.buses_t.marginal_price.sum()
@@ -100,14 +100,30 @@ print(f"Cost Breakdown: {cost_breakdown}")
 marginal_prices = network.buses_t.marginal_price
 print(marginal_prices.head())
 
+energy_system = pd.DataFrame({
+    "Load (kWh)": load_profile,
+    "Grid supply (kWh)": grid_supply,
+    "Spot Price (Euro/kWh)": low_power_mode["Spot Price"].squeeze(),
+    "Solar (kWh)": solar_profile,
+    "Battery (kWh)": battery_soc,
+    "Battery2 (kWh)": battery_soc2,
+    "Battery3 (kWh)": battery_soc3,
+    "Battery4 (kWh)": battery_soc4,
+    "Battery5 (kWh)": battery_soc5,
+    "Battery6 (kWh)": battery_soc6
+})
+
+energy_system.to_csv("Results/BatterySolar_Case/energy_system_bs.csv")
+
 economic_results = pd.DataFrame({
+    "Grid supply (kWh)": [grid_supply.sum()],
     "Total System Cost(Euro)": [total_system_cost],
     "Grid Cost(Euro)": [grid_cost],
     "Battery Charge Cost(Euro)": [battery_charge_cost],
     "Marginal Prices (Avg Euro/kWh)": [marginal_prices.mean().mean()] ,
 })
 
-print(economic_results)
+economic_results.to_csv("Results/BatterySolar_Case/economic_results_bs.csv")
 
 # Plot just one single day
 start_index = 6000
@@ -124,7 +140,8 @@ plt.ylabel("Power (kWh)")
 plt.legend()
 plt.title("Load, Grid Supply, and Battery Usage Over Time")
 plt.grid(True)
-plt.show()
+plt.savefig('Results/BatterySolar_Case/1_day_battery_solar.png')
+plt.close()
 
 
 # Battery soc
@@ -136,7 +153,8 @@ plt.title("Battery State of Charge Over Time")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.show()
+plt.savefig('Results/BatterySolar_Case/1_day_battery_solar_soc.png')
+plt.close()
 
 # Battery soc and solar productrion
 plt.figure(figsize=(16, 5))
@@ -148,6 +166,6 @@ plt.title("Battery SOC and solar")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.show()
+plt.savefig('Results/BatterySolar_Case/1_day_battery_solar_prod.png')
+plt.close()
 
-#

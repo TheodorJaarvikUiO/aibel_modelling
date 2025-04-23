@@ -14,7 +14,7 @@ network.set_snapshots(low_power_mode.index)
 #Add components, Bus - Load - Generator(Grid) - Battery
 network.add("Bus", "bus0")
 network.add("Load", "Shipyard_Load", bus="bus0", p_set=low_power_mode[1].squeeze()) # Load from csv
-network.add("Generator", "Grid", bus="bus0",p_nom=3000, marginal_cost=low_power_mode['Spot Price'].squeeze()) # 3 MW nominal power
+network.add("Generator", "Grid", bus="bus0",p_nom=5000, marginal_cost=low_power_mode['Spot Price'].squeeze()) # 3 MW nominal power
 
 battery_names = ["Battery", "Battery2", "Battery3", "Battery4", "Battery5", "Battery6"]
 
@@ -77,16 +77,31 @@ print(f"Cost Breakdown: {cost_breakdown}")
 marginal_prices = network.buses_t.marginal_price
 print(marginal_prices.head())
 
+energy_system = pd.DataFrame({
+    "Load (kWh)": load_profile,
+    "Grid supply (kWh)": grid_supply,
+    "Spot Price (Euro/kWh)": low_power_mode["Spot Price"].squeeze(),
+    "Battery (kWh)": battery_soc,
+    "Battery2 (kWh)": battery_soc2,
+    "Battery3 (kWh)": battery_soc3,
+    "Battery4 (kWh)": battery_soc4,
+    "Battery5 (kWh)": battery_soc5,
+    "Battery6 (kWh)": battery_soc6
+})
+
+energy_system.to_csv('Results/Battery_Case/energy_system.csv')
+
 economic_results = pd.DataFrame({
+    "Grid supply (kWh)": [grid_supply.sum()],
     "Total System Cost(Euro)": [total_system_cost],
     "Grid Cost(Euro)": [grid_cost],
     "Battery Charge Cost(Euro)": [battery_charge_cost],
     "Marginal Prices (Avg Euro/kWh)": [marginal_prices.mean().mean()] ,
 })
 
-print(economic_results)
+economic_results.to_csv('Results/Battery_Case/economic_results.csv')
 
-# Plot just one single day
+# Plot just one week
 start_index = 6000
 end_index = 6100
 plt.figure(figsize=(16, 5))
@@ -100,7 +115,8 @@ plt.ylabel("Power (kWh)")
 plt.legend()
 plt.title("Load, Grid Supply, and Battery Usage Over Time")
 plt.grid(True)
-plt.show()
+plt.savefig('Results/Battery_Case/1_week_battery.png')
+plt.close()
 
 
 # Battery soc
@@ -112,4 +128,5 @@ plt.title("Battery State of Charge Over Time")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.show()
+plt.savefig('Results/Battery_Case/1_week_battery_soc.png')
+plt.close()
