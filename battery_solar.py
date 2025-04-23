@@ -121,6 +121,7 @@ economic_results = pd.DataFrame({
     "Grid Cost(Euro)": [grid_cost],
     "Battery Charge Cost(Euro)": [battery_charge_cost],
     "Marginal Prices (Avg Euro/kWh)": [marginal_prices.mean().mean()] ,
+    "PV Generation (kWh)": [solar_profile.sum()]
 })
 
 economic_results.to_csv("Results/BatterySolar_Case/economic_results_bs.csv")
@@ -140,7 +141,7 @@ plt.ylabel("Power (kWh)")
 plt.legend()
 plt.title("Load, Grid Supply, and Battery Usage Over Time")
 plt.grid(True)
-plt.savefig('Results/BatterySolar_Case/1_day_battery_solar.png')
+plt.savefig('Results/BatterySolar_Case/1_week_battery_solar.png')
 plt.close()
 
 
@@ -153,7 +154,7 @@ plt.title("Battery State of Charge Over Time")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('Results/BatterySolar_Case/1_day_battery_solar_soc.png')
+plt.savefig('Results/BatterySolar_Case/1_week_battery_solar_soc.png')
 plt.close()
 
 # Battery soc and solar productrion
@@ -166,6 +167,28 @@ plt.title("Battery SOC and solar")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('Results/BatterySolar_Case/1_day_battery_solar_prod.png')
+plt.savefig('Results/BatterySolar_Case/1_week_battery_solar_prod.png')
 plt.close()
 
+# 1 Year Solar
+plt.figure(figsize=(16, 5))
+plt.plot(time_index, solar_profile, label="Solar (kWh)", color="orange")
+plt.xlabel("Time")
+plt.ylabel("kW per hour")
+plt.title("Solar Profile")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig('Results/BatterySolar_Case/1_year_solar.png')
+plt.close()
+
+solar_profile.index = pd.to_datetime(solar_profile.index)
+monthly = solar_profile.resample("ME").sum()
+monthly.index = monthly.index.strftime("%b")
+plt.figure(figsize=(16, 5))
+monthly.plot(kind='bar', title="Monthly PV Production")
+plt.ylabel("kW per hour")
+plt.xlabel("Month")
+plt.tight_layout()
+plt.savefig('Results/BatterySolar_Case/monthly_pv.png')
+plt.close()

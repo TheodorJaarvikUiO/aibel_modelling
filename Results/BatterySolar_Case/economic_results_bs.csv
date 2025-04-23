@@ -1,2 +1,2 @@
-,Grid supply (kWh),Total System Cost(Euro),Grid Cost(Euro),Battery Charge Cost(Euro),Marginal Prices (Avg Euro/kWh)
-0,7023778.24188056,297699.1779424127,297699.1779424122,146781.94376350497,0.04659596617337788
+,Grid supply (kWh),Total System Cost(Euro),Grid Cost(Euro),Battery Charge Cost(Euro),Marginal Prices (Avg Euro/kWh),PV Generation (kWh)
+0,7023778.24188056,297699.1779424127,297699.1779424122,146781.94376350497,0.04659596617337788,544256.0011672094

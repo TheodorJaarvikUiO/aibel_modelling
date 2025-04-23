@@ -17,8 +17,9 @@ padded[:len(rain_data)] = rain_data
 
 rain_profile = pd.DataFrame(index=network.snapshots)
 rain_profile["rain_production"] = padded
+rain_profile = rain_profile / 1000
 
-print(rain_profile.head())
+print(rain_profile.head(50))
 
 #Add components, Bus - Load - Generator(Grid) - Battery
 network.add("Bus", name="bus0")
@@ -39,7 +40,7 @@ network.add("Generator",
             bus="bus0",
             carrier="rain",
             p_nom=1,
-            p_max_pu=rain_profile["rain_production"]/1000,
+            p_max_pu=rain_profile["rain_production"],
             efficiency=1.0,
             capital_cost=0,
             marginal_cost=0.0,
@@ -127,6 +128,7 @@ economic_results = pd.DataFrame({
     "Grid Cost(Euro)": [grid_cost],
     "Battery Charge Cost(Euro)": [battery_charge_cost],
     "Marginal Prices (Avg Euro/kWh)": [marginal_prices.mean().mean()] ,
+    "Rain Power (kW)": [rain_profile.sum()]
 })
 
 economic_results.to_csv("Results/BatteryRain_Case/economic_results_br.csv")
@@ -146,7 +148,7 @@ plt.ylabel("Power (kWh)")
 plt.legend()
 plt.title("Load, Grid Supply, Battery, and Rain Usage Over Time")
 plt.grid(True)
-plt.savefig('Results/BatteryRain_Case/1_day_battery_rain.png')
+plt.savefig('Results/BatteryRain_Case/1_week_battery_rain.png')
 plt.close()
 
 
@@ -159,7 +161,7 @@ plt.title("Battery State of Charge Over Time")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('Results/BatteryRain_Case/1_day_battery_rain_soc.png')
+plt.savefig('Results/BatteryRain_Case/1_week_battery_rain_soc.png')
 plt.close()
 
 # Battery soc and solar productrion
@@ -172,5 +174,28 @@ plt.title("Battery SOC and rain")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('Results/BatteryRain_Case/1_day_battery_rain_prod.png')
+plt.savefig('Results/BatteryRain_Case/1_week_battery_rain_prod.png')
+plt.close()
+
+# 1 Year Rain
+plt.figure(figsize=(16, 5))
+plt.plot(time_index, rain_profile, label="Rain (kWh)", color="blue")
+plt.xlabel("Time")
+plt.ylabel("kW per hour")
+plt.title("Rain Profile")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig('Results/BatteryRain_Case/1_year_rain.png')
+plt.close()
+
+rain_profile.index = pd.to_datetime(rain_profile.index)
+monthly = rain_profile.resample("ME").sum()
+monthly.index = monthly.index.strftime("%b")
+plt.figure(figsize=(16, 5))
+monthly.plot(kind='bar', title="Monthly Rain Production")
+plt.ylabel("Rain Production")
+plt.xlabel("Month")
+plt.tight_layout()
+plt.savefig('Results/BatteryRain_Case/monthly_rain.png')
 plt.close()
