@@ -5,9 +5,13 @@ import numpy as np
 
 #Network parameters and load
 low_power_mode = pd.read_csv('Datasets/aibel_yearly.csv', header=None, index_col=0, parse_dates=True, sep=';')
+shuffled = pd.read_csv('Datasets/shuffled_power_timeseries_by_day.csv', index_col=0, parse_dates=True, sep=',')
+low_power_mode[1] = shuffled['Power_Consumption'].iloc[:len(low_power_mode)].values
 network = pypsa.Network()
+
 Spot_prices2 = pd.read_csv('Datasets/Spot_price.csv', index_col=0)
 rain = pd.read_csv('Datasets/rain_production.csv', index_col=2)
+low_power_mode.index = shuffled.index
 low_power_mode['Spot Price'] = Spot_prices2['Spot Price (NO2) EUR/MWh'].iloc[:len(low_power_mode)].values / 1000
 network.set_snapshots(low_power_mode.index)
 

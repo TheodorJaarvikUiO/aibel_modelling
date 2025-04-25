@@ -5,10 +5,13 @@ import pypsa
 
 #Network parameters and load
 low_power_mode = pd.read_csv('Datasets/aibel_yearly.csv', header=None, index_col=0, parse_dates=True, sep=';')
+shuffled = pd.read_csv('Datasets/shuffled_power_timeseries_by_day.csv', index_col=0, parse_dates=True, sep=',')
 network = pypsa.Network()
 Spot_prices2 = pd.read_csv('Datasets/Spot_price.csv', index_col=0)
 
 low_power_mode['Spot Price'] = Spot_prices2['Spot Price (NO2) EUR/MWh'].iloc[:len(low_power_mode)].values / 1000
+low_power_mode[1] = shuffled['Power_Consumption'].iloc[:len(low_power_mode)].values
+low_power_mode.index = shuffled.index
 network.set_snapshots(low_power_mode.index)
 
 #Add components, Bus - Load - Generator(Grid) - Battery
