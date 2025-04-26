@@ -133,3 +133,47 @@ plt.grid(True)
 plt.tight_layout()
 plt.savefig('Results/Battery_Case/1_week_battery_soc.png')
 plt.close()
+
+grid_supply_no_battery = low_power_mode[1]
+grid_cost_no_battery = (grid_supply_no_battery * low_power_mode["Spot Price"]).resample('ME').sum()
+grid_cost_with_battery = (grid_supply * low_power_mode["Spot Price"]).resample('ME').sum()
+months = grid_cost_with_battery.index.strftime('%b')
+
+# Monthly grid cost
+plt.figure(figsize=(16, 5))
+bar_width = 0.20
+x = range(len(months))
+plt.bar(x, grid_cost_no_battery.values, width=bar_width, label="Without Battery", color="red")
+plt.bar([i + bar_width for i in x], grid_cost_with_battery.values, width=bar_width, label="With Battery", color="green")
+plt.xlabel("Month")
+plt.ylabel("Grid Cost (€)")
+plt.title("Monthly Grid Cost: With vs Without Battery")
+plt.xticks([i + bar_width/2 for i in x], months)
+plt.legend()
+plt.grid(True, linestyle="--", alpha=0.6)
+plt.tight_layout()
+plt.savefig('Results/Battery_Case/monthly_grid_cost_comparison.png')
+plt.close()
+
+grid_supply_og = low_power_mode[1].resample('ME').sum()
+grid_supply_with_battery = grid_supply.resample('ME').sum()
+
+# Monthly consumption
+plt.figure(figsize=(16, 5))
+bar_width = 0.20
+x = range(len(months))
+plt.bar(x, grid_supply_og.values, width=bar_width, label="Without Battery", color="red")
+plt.bar([i + bar_width for i in x], grid_supply_with_battery.values, width=bar_width, label="With Battery", color="green")
+plt.xlabel("Month")
+plt.ylabel("kW")
+plt.title("Monthly Grid Cost: With vs Without Battery")
+plt.xticks([i + bar_width/2 for i in x], months)
+plt.legend()
+plt.grid(True, linestyle="--", alpha=0.6)
+plt.tight_layout()
+plt.savefig('Results/Battery_Case/monthly_grid_supply_comparison.png')
+plt.close()
+
+
+
+
