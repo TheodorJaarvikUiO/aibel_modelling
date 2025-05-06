@@ -48,8 +48,8 @@ weather_df = weather_df.resample('h').mean()
 
 cec_modules = pvlib.pvsystem.retrieve_sam("cecmod")
 sapm_inverters = pvlib.pvsystem.retrieve_sam("cecinverter")
-module = cec_modules["Znshine_PV_Tech_ZXP6_72_295_P"]
-inverter = sapm_inverters["ABB__MICRO_0_3_I_OUTD_US_208__208V_"]
+module = cec_modules["SunPower_SPR_X21_345"]
+inverter = sapm_inverters["SMA_America__SB5_0_1SP_US_40__240V_"]
 temperature_model_parameters = pvlib.temperature.TEMPERATURE_MODEL_PARAMETERS[
     "sapm"
 ]["open_rack_glass_glass"]
@@ -82,12 +82,12 @@ fig.add_trace(go.Scatter(x=module_energy.index, y=module_energy, mode='lines'))
 fig.update_layout(yaxis_title='Energy Produced (kWh)')
 fig.show()
 
-# Define panel dimensions and peak power for Znshine_PV_Tech_ZXP6_72_295_P
-panel_height = 1.95
-panel_width = 0.99
-panel_peak_power = 295
-tilt_angle = 49
-orientation = 180
+# Define panel dimensions and peak power for SunPower_SPR_X21_345
+panel_height = 1.559  # meters
+panel_width = 1.046   # meters
+panel_peak_power = 345  # watts
+tilt_angle = 49        # Tilt
+orientation = 180      # South-facing
 
 # Calculate the area occupied by the PV panel on a flat roof
 panel_area_flat_roof = (
@@ -107,7 +107,7 @@ print(f"Based on the specified system characteristics, {panel_count} panels can 
 
 # Calculate the monthly production of the entire PV installation 
 system_production = panel_count * module_energy / 1000
-system_production.to_csv('Datasets/system_production.csv', index=True)
+system_production.to_csv('Datasets/PV_system_production.csv', index=True)
 #monthly_production = system_production.resample('ME').sum()
 
 # Plot monthly production
