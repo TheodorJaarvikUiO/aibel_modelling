@@ -58,22 +58,26 @@ base_case = pd.read_csv("Datasets/shuffled_power_timeseries_by_day.csv", index_c
 battery_case = pd.read_csv("Results/Battery_Case/energy_system.csv", index_col=0, parse_dates=True)
 solar_case = pd.read_csv("Results/BatterySolar_Case/energy_system_bs.csv", index_col=0, parse_dates=True)
 rain_case = pd.read_csv("Results/BatteryRain_Case/energy_system_br.csv", index_col=0, parse_dates=True)
+wind_case = pd.read_csv("Results/BatteryWind_Case/energy_system_bw.csv", index_col=0, parse_dates=True)
+solar_wind_case = pd.read_csv("Results/BatteryWindSolar_Case/energy_system_bws.csv", index_col=0, parse_dates=True)
 
 base_case_grid = base_case['Power_Consumption'].resample('ME').sum()
 battery_case_grid = battery_case['Grid supply (kWh)'].resample('ME').sum()
 solar_case_grid = solar_case['Grid supply (kWh)'].resample('ME').sum()
+wind_case_grid = wind_case['Grid supply (kWh)'].resample('ME').sum()
 rain_case_grid = rain_case['Grid supply (kWh)'].resample('ME').sum()
+solar_wind_case_grid = solar_wind_case['Grid supply (kWh)'].resample('ME').sum()
 months = base_case_grid.index.strftime('%b')
 x = range(len(months))
 
 # Monthly grid consumption
 plt.figure(figsize=(16, 5))
-bar_width = 0.20
+bar_width = 0.19
 x = range(len(months))
 plt.bar(x, base_case_grid.values, width=bar_width, label="Base Case", color="red")
-plt.bar([i + bar_width for i in x], battery_case_grid.values, width=bar_width, label="Battery", color="green")
-plt.bar([i + bar_width*2 for i in x], rain_case_grid.values, width=bar_width, label="Battery & Rain", color="blue")
-plt.bar([i + bar_width*3 for i in x], solar_case_grid.values, width=bar_width, label="Battery & Solar", color="orange")
+plt.bar([i + bar_width*1 for i in x], solar_case_grid.values, width=bar_width, label="Battery & Solar", color="orange")
+plt.bar([i + bar_width*2 for i in x], wind_case_grid.values, width=bar_width, label="Battery & Wind", color="green")
+plt.bar([i + bar_width*3 for i in x], solar_wind_case_grid.values, width=bar_width, label="Battery & Solar & Wind", color="blue")
 plt.xlabel("Month")
 plt.ylabel("kW")
 plt.title("Monthly Grid Consumption")
@@ -83,4 +87,5 @@ plt.grid(True, linestyle="--", alpha=0.6)
 plt.tight_layout()
 plt.savefig('Results/Analysis/monthly_grid_consumption.png')
 plt.close()
+
 
