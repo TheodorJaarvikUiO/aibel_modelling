@@ -97,7 +97,7 @@ panel_area_flat_roof = (
     )
 
 # calculate amount of panels that fit in a certain roof area
-roof_area = 3600
+roof_area = 6000
 panel_count = math.floor(roof_area / panel_area_flat_roof)
 
 # calculate the peak capacity of this system in kWp
