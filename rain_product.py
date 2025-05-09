@@ -13,13 +13,13 @@ from pathlib import Path
 # Reading the CSV file
 df = pd.read_csv("Datasets/rain_data_storasund_1year.csv", sep= ";", decimal= ",") 
 
-factor = 1E-3
+factor = 1E-3 / 3600
 
 energy_perdrop = 0.022 #J/drop
 
-avg_voldrop = 50E-6 #m^3
+avg_voldrop = 50E-9 #m^3
 
-roof_area = 0.7 * 18100 #m^2
+roof_area = 18100 #m^2
 
 
 

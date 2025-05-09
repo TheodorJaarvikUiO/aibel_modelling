@@ -12,7 +12,7 @@ low_power_mode[1] = shuffled['Power_Consumption'].iloc[:len(low_power_mode)].val
 network = pypsa.Network()
 
 Spot_prices2 = pd.read_csv('Datasets/Spot_price.csv', index_col=0)
-wind_profile = pd.read_csv('Datasets/wind_turbine_output.csv')
+wind_profile = pd.read_csv('Datasets/wind_turbine_output_wind_park.csv')
 wind_profile = wind_profile.drop(['time','wind_speed', 'temperature', 'pressure'], axis = 1)
 wind_profile = wind_profile.dropna()
 
@@ -127,7 +127,7 @@ energy_system = pd.DataFrame({
     "Battery6 (kWh)": battery_soc6
 })
 
-energy_system.to_csv("Results/BatteryWind_Case/energy_system_bw.csv")
+energy_system.to_csv("Results/BatteryWindPark_Case/energy_system_bwp.csv")
 
 economic_results = pd.DataFrame({
     "Grid supply (kWh)": [grid_supply.sum()],
@@ -135,10 +135,10 @@ economic_results = pd.DataFrame({
     "Grid Cost(Euro)": [grid_cost],
     "Battery Charge Cost(Euro)": [battery_charge_cost],
     "Marginal Prices (Avg Euro/kWh)": [marginal_prices.mean().mean()] ,
-    "PV Generation (kWh)": [wind_profile.sum()]
+    "Windpark Generation (kWh)": [wind_profile.sum()]
 })
 
-economic_results.to_csv("Results/BatteryWind_Case/economic_results_bw.csv")
+economic_results.to_csv("Results/BatteryWindPark_Case/economic_results_bwp.csv")
 
 # Plot just one single day
 start_index = 6000
@@ -155,7 +155,7 @@ plt.ylabel("Power (kWh)")
 plt.legend()
 plt.title("Load, Grid Supply, and Battery Usage Over Time")
 plt.grid(True)
-plt.savefig('Results/BatteryWind_Case/1_week_battery_wind.png')
+plt.savefig('Results/BatteryWindPark_Case/1_week_battery_windpark.png')
 plt.close()
 
 
@@ -168,7 +168,7 @@ plt.title("Battery State of Charge Over Time")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('Results/BatteryWind_Case/1_week_battery_wind_soc.png')
+plt.savefig('Results/BatteryWindPark_Case/1_week_battery_windpark_soc.png')
 plt.close()
 
 # Battery soc and solar productrion
@@ -177,11 +177,11 @@ plt.plot(time_index[start_index:end_index], battery_soc[start_index:end_index] +
 plt.plot(time_index[start_index:end_index], wind_profile[start_index:end_index], label="Wind (kWh)", color="orange")
 plt.xlabel("Time")
 plt.ylabel("kW per hour")
-plt.title("Battery SOC and wind")
+plt.title("Battery SOC and Windpark")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('Results/BatteryWind_Case/1_week_battery_wind_prod.png')
+plt.savefig('Results/BatteryWindPark_Case/1_week_battery_windpark_prod.png')
 plt.close()
 
 # 1 Year Wind
@@ -189,11 +189,11 @@ plt.figure(figsize=(16, 5))
 plt.plot(time_index, wind_profile, label="Wind (kWh)", color="orange")
 plt.xlabel("Time")
 plt.ylabel("kWh")
-plt.title("Wind Profile")
+plt.title("Windpark profile")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('Results/BatteryWind_Case/1_year_wind.png')
+plt.savefig('Results/BatteryWindPark_Case/1_year_windpark.png')
 plt.close()
 
 wind_profile.index = pd.to_datetime(wind_profile.index)
@@ -204,7 +204,7 @@ monthly.plot(kind='bar', title="Monthly Wind Production")
 plt.ylabel("kWh")
 plt.xlabel("Month")
 plt.tight_layout()
-plt.savefig('Results/BatteryWind_Case/monthly_wind.png')
+plt.savefig('Results/BatteryWindPark_Case/monthly_windpark.png')
 plt.close()
 
 grid_supply_no_battery = low_power_mode[1]
@@ -216,16 +216,16 @@ months = grid_cost_with_battery.index.strftime('%b')
 plt.figure(figsize=(16, 5))
 bar_width = 0.20
 x = range(len(months))
-plt.bar(x, grid_cost_no_battery.values, width=bar_width, label="Without Battery & Wind", color="red")
-plt.bar([i + bar_width for i in x], grid_cost_with_battery.values, width=bar_width, label="With Battery & Wind", color="green")
+plt.bar(x, grid_cost_no_battery.values, width=bar_width, label="Without Battery & Windpark", color="red")
+plt.bar([i + bar_width for i in x], grid_cost_with_battery.values, width=bar_width, label="With Battery & Windpark", color="green")
 plt.xlabel("Month")
 plt.ylabel("Grid Cost (€)")
-plt.title("Monthly Grid Cost: With vs Without Wind & Battery")
+plt.title("Monthly Grid Cost: With vs Without Windpark & Battery")
 plt.xticks([i + bar_width/2 for i in x], months)
 plt.legend()
 plt.grid(True, linestyle="--", alpha=0.6)
 plt.tight_layout()
-plt.savefig('Results/BatteryWind_Case/monthly_grid_cost_comparison_bw.png')
+plt.savefig('Results/BatteryWindPark_Case/monthly_grid_cost_comparison_bwp.png')
 plt.close()
 
 grid_supply_og = low_power_mode[1].resample('ME').sum()
@@ -236,13 +236,13 @@ plt.figure(figsize=(16, 5))
 bar_width = 0.20
 x = range(len(months))
 plt.bar(x, grid_supply_og.values, width=bar_width, label="Original", color="red")
-plt.bar([i + bar_width for i in x], grid_supply_with_battery.values, width=bar_width, label="With Battery & Wind", color="green")
+plt.bar([i + bar_width for i in x], grid_supply_with_battery.values, width=bar_width, label="With Battery & Windpark", color="green")
 plt.xlabel("Month")
 plt.ylabel("kWh")
-plt.title("Monthly Grid supply: With vs Without Wind & Battery")
+plt.title("Monthly Grid supply: With vs Without Windpark & Battery")
 plt.xticks([i + bar_width/2 for i in x], months)
 plt.legend()
 plt.grid(True, linestyle="--", alpha=0.6)
 plt.tight_layout()
-plt.savefig('Results/BatteryWind_Case/monthly_grid_supply_comparison_bw.png')
+plt.savefig('Results/BatteryWindPark_Case/monthly_grid_supply_comparison_bwp.png')
 plt.close()
