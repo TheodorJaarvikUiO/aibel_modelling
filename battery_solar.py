@@ -10,7 +10,7 @@ low_power_mode[1] = shuffled['Power_Consumption'].iloc[:len(low_power_mode)].val
 network = pypsa.Network()
 
 Spot_prices2 = pd.read_csv('Datasets/Spot_price.csv', index_col=0)
-solar_profile = pd.read_csv('Datasets/system_production.csv', index_col=0)
+solar_profile = pd.read_csv('Datasets/PV_system_production.csv', index_col=0)
 solar_profile["0"] = solar_profile["0"].clip(lower=0.0).fillna(0.0)
 low_power_mode.index = shuffled.index
 low_power_mode['Spot Price'] = Spot_prices2['Spot Price (NO2) EUR/MWh'].iloc[:len(low_power_mode)].values / 1000

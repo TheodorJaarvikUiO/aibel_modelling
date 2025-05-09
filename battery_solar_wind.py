@@ -23,7 +23,7 @@ wind_output_full = np.pad(wind_profile['power_output_kW'].values,
                           (0, len(low_power_mode) - len(wind_profile)),
                           'constant', constant_values=0.0)
 
-solar_profile = pd.read_csv('Datasets/system_production.csv', index_col=0)
+solar_profile = pd.read_csv('Datasets/PV_system_production.csv', index_col=0)
 solar_profile["0"] = solar_profile["0"].clip(lower=0.0).fillna(0.0)
 
 low_power_mode['wind_output'] = wind_output_full
@@ -263,4 +263,18 @@ plt.legend()
 plt.grid(True, linestyle="--", alpha=0.6)
 plt.tight_layout()
 plt.savefig('Results/BatteryWindSolar_Case/monthly_grid_supply_comparison_bw.png')
+plt.close()
+
+# Pie chart energy system
+labels = 'Grid', 'Wind', 'Solar'
+sizes = [sum(grid_supply.values), sum(wind_profile.values), sum(solar_profile.values)]
+colors = ['lightcoral', 'lightgreen', 'lightblue']
+explode = (0, 0, 0)  # explode 1st slice
+
+plt.figure(figsize=(8, 8))
+plt.pie(sizes, explode=explode, labels=labels, colors=colors,
+        autopct='%1.1f%%', shadow=True, startangle=90)
+plt.axis('equal')
+plt.tight_layout()
+plt.savefig('Results/BatteryWindSolar_Case/energy_system_pie_bws.png')
 plt.close()
