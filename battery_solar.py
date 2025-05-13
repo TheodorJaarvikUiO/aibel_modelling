@@ -236,3 +236,16 @@ plt.grid(True, linestyle="--", alpha=0.6)
 plt.tight_layout()
 plt.savefig('Results/BatterySolar_Case/monthly_grid_supply_comparison_bs.png')
 plt.close()
+
+labels = 'Grid', 'Solar PV'
+sizes = [sum(grid_supply.values), sum(solar_profile.values)]
+colors = ['lightcoral', 'lightgreen']
+explode = (0, 0)  # explode 1st slice
+
+plt.figure(figsize=(8, 8))
+plt.pie(sizes, explode=explode, labels=labels, colors=colors,
+        autopct='%1.1f%%', shadow=True, startangle=90)
+plt.axis('equal')
+plt.tight_layout()
+plt.savefig('Results/BatterySolar_Case/energy_system_pie_bs.png')
+plt.close()

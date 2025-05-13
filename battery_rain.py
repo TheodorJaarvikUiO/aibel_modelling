@@ -203,3 +203,17 @@ plt.xlabel("Month")
 plt.tight_layout()
 plt.savefig('Results/BatteryRain_Case/monthly_rain.png')
 plt.close()
+
+# Pie chart energy system
+labels = 'Grid', 'Rain'
+sizes = [sum(grid_supply.values), sum(rain_profile.values)]
+colors = ['lightcoral', 'lightgreen']
+explode = (0, 0)  # explode 1st slice
+
+plt.figure(figsize=(8, 8))
+plt.pie(sizes, explode=explode, labels=labels, colors=colors,
+        autopct='%1.1f%%', shadow=True, startangle=90)
+plt.axis('equal')
+plt.tight_layout()
+plt.savefig('Results/BatteryRain_Case/energy_system_pie_br.png')
+plt.close()
