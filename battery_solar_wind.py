@@ -213,15 +213,20 @@ solar_profile.index = pd.to_datetime(solar_profile.index)
 monthly_solar = solar_profile.resample("ME").sum()
 monthly_solar.index = monthly_solar.index.strftime("%b")
 
-plt.figure(figsize=(16, 5))
-bar_width = 0.35
+plt.figure(figsize=(15, 6))
+bar_width = 0.6
 x = range(len(monthly.index))
-plt.bar(x, monthly.values, width=bar_width, color="purple", label="Wind")
-plt.bar([i + bar_width for i in x], monthly_solar.values, width=bar_width, color="orange", label="Solar")
+total_monthly = monthly.values.flatten() + monthly_solar.values.flatten()
+plt.bar(x, monthly.values, width=bar_width, color="yellowgreen", label="Wind")
+plt.bar(x, monthly_solar.values, width=bar_width, bottom=monthly.values, color="orange", label="Solar")
+average_total = total_monthly.mean()
+plt.axhline(y=average_total, color='dodgerblue', linestyle='--', linewidth=2, label=f'Average ({average_total:.0f} kWh)')
+plt.title("Monthly Small Wind-Turbine and Solar Generation")
 plt.ylabel("kWh")
 plt.xlabel("Month")
-plt.tight_layout()
+plt.xticks(ticks=x, labels=monthly.index)
 plt.legend()
+plt.tight_layout()
 plt.savefig('Results/BatteryWindSolar_Case/monthly_wind_solar.png')
 plt.close()
 
@@ -250,14 +255,17 @@ grid_supply_og = low_power_mode[1].resample('ME').sum()
 grid_supply_with_battery = grid_supply.resample('ME').sum()
 
 # Monthly consumption
-plt.figure(figsize=(16, 5))
-bar_width = 0.20
+plt.figure(figsize=(15, 6))
+bar_width = 0.35
 x = range(len(months))
-plt.bar(x, grid_supply_og.values, width=bar_width, label="Original", color="red")
-plt.bar([i + bar_width for i in x], grid_supply_with_battery.values, width=bar_width, label="With Battery & Wind", color="green")
+plt.bar(x, grid_supply_og.values, width=bar_width, label="Base", color="dodgerblue")
+plt.bar([i + bar_width for i in x], grid_supply_with_battery.values, width=bar_width, label="With Battery, Solar & small Wind", color="yellowgreen")
+for i, val in enumerate(grid_supply_with_battery.values):
+    percent = val / grid_supply_og.values[i] * 100
+    plt.text(i + bar_width + 0.05, val + 10, f"{percent:.1f}%", ha='center', va='bottom')
 plt.xlabel("Month")
 plt.ylabel("kWh")
-plt.title("Monthly Grid supply: With vs Without Wind & Battery")
+plt.title("Monthly Grid supply: Base vs With small Wind, PV & Battery")
 plt.xticks([i + bar_width/2 for i in x], months)
 plt.legend()
 plt.grid(True, linestyle="--", alpha=0.6)

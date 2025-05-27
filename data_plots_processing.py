@@ -98,15 +98,15 @@ solar_wind_case_grid = solar_wind_case['Grid supply (kWh)'].sum()
 wind_park_case_grid = wind_park_case['Grid supply (kWh)'].sum()
 
 
-cases = ["Battery & Rain", "Battery & Solar", "Battery & Wind", "Battery & Solar & Wind", "Battery & Windpark"]
-case_values = [rain_case_grid, solar_case_grid, wind_case_grid, solar_wind_case_grid, wind_park_case_grid]
+cases = ["Battery","Battery & Rain", "Battery & Solar", "Battery & Wind", "Battery & Solar & Wind", "Battery & Windpark"]
+case_values = [battery_case_grid, rain_case_grid, solar_case_grid, wind_case_grid, solar_wind_case_grid, wind_park_case_grid]
 
 x = range(len(cases))
 width = 0.35
 
 plt.figure(figsize=(12, 6))
-plt.bar([i - width/2 for i in x], [base_case_grid]*len(cases), width=width, label='Base Case', color='red')
-bars = plt.bar([i + width/2 for i in x], case_values, width=width, label='Scenario Case', color='orange')
+plt.bar([i - width/2 for i in x], [base_case_grid]*len(cases), width=width, label='Base Case', color='dodgerblue')
+bars = plt.bar([i + width/2 for i in x], case_values, width=width, label='Scenario Case', color='yellowgreen')
 
 for i, val in enumerate(case_values):
     percent = val / base_case_grid * 100
@@ -139,8 +139,8 @@ x = range(len(cases))
 width = 0.35
 
 plt.figure(figsize=(12, 6))
-plt.bar([i - width/2 for i in x], [base_case_grid_cost]*len(cases), width=width, label='Base Case', color='red')
-bars = plt.bar([i + width/2 for i in x], case_values, width=width, label='Scenario Case', color='orange')
+plt.bar([i - width/2 for i in x], [base_case_grid_cost]*len(cases), width=width, label='Base Case', color='dodgerblue')
+bars = plt.bar([i + width/2 for i in x], case_values, width=width, label='Scenario Case', color='yellowgreen')
 
 for i, val in enumerate(case_values):
     percent = val / base_case_grid_cost * 100
@@ -157,3 +157,22 @@ plt.savefig('Results/Analysis/grid_consumption_cost_comparison.png')
 plt.close()
 
 
+wind_case_prod = wind_case['Wind (kWh)'].resample('ME').sum()
+wind_park_case_prod = wind_park_case['Wind (kWh)'].resample('ME').sum()
+
+months = wind_case_prod.index.strftime('%b')
+
+plt.figure(figsize=(16, 5))
+bar_width = 0.35
+x = range(len(months))
+plt.bar(x, wind_park_case_prod.values, width=bar_width, label="Big turbine", color="orangered")
+plt.bar([i + bar_width for i in x], wind_case_prod.values, width=bar_width, label="Small turbine", color="dodgerblue")
+plt.xlabel("Month")
+plt.ylabel("kWh")
+plt.title("Monthly Small and Big wind turbine Generation")
+plt.xticks([i + bar_width/2 for i in x], months)
+plt.legend()
+plt.grid(True, linestyle="--", alpha=0.6)
+plt.tight_layout()
+plt.savefig('Results/Analysis/monthly_wind_windpark.png')
+plt.close()

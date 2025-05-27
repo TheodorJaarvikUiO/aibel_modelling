@@ -232,14 +232,19 @@ grid_supply_og = low_power_mode[1].resample('ME').sum()
 grid_supply_with_battery = grid_supply.resample('ME').sum()
 
 # Monthly consumption
-plt.figure(figsize=(16, 5))
-bar_width = 0.20
+plt.figure(figsize=(15, 6))
+bar_width = 0.35
 x = range(len(months))
-plt.bar(x, grid_supply_og.values, width=bar_width, label="Original", color="red")
-plt.bar([i + bar_width for i in x], grid_supply_with_battery.values, width=bar_width, label="With Battery & Windpark", color="green")
+plt.bar(x, grid_supply_og.values, width=bar_width, label="Base", color="dodgerblue")
+plt.bar([i + bar_width for i in x], grid_supply_with_battery.values, width=bar_width, label="With Battery & big wind turbine", color="yellowgreen")
+for i, val in enumerate(grid_supply_with_battery.values):
+    percent = val / grid_supply_og.values[i] * 100
+    plt.text(i + bar_width + 0.05, val + 10, f"{percent:.1f}%", ha='center', va='bottom')
+
+
 plt.xlabel("Month")
 plt.ylabel("kWh")
-plt.title("Monthly Grid supply: With vs Without Windpark & Battery")
+plt.title("Monthly Grid supply: Base vs With big wind turbine & Battery")
 plt.xticks([i + bar_width/2 for i in x], months)
 plt.legend()
 plt.grid(True, linestyle="--", alpha=0.6)
